@@ -1,4 +1,5 @@
 import argparse
+import os
 import onnx
 import onnxruntime as ort
 import numpy as np
@@ -94,7 +95,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # handle cases where memryx nc cropped a core model
+    # we want to compare vs. that for an accurate comparison
     model_path = args.model_path
+    basename = str(os.path.basename(model_path))
+    cropped_core_model = str(os.path.dirname(model_path)) + "model_0_" + basename
+    if os.path.exists(cropped_core_model):
+        print(f"Found a NC-cropped core model with same name. Using that instead!")
+        model_path = cropped_core_model
 
     # Number of inferences to perform
     num_inferences = args.num_frames
