@@ -2,4 +2,3 @@ numpy
 onnx
 onnxruntime
 onnxsim
-wheel

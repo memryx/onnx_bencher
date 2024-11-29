@@ -1,2 +1,8 @@
 *_env*
+*_venv*
 *.onnx
+*.h5
+*.pb
+*.tflite
+*.dfp
+*.log

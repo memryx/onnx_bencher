@@ -1,6 +1,5 @@
+wheel
 numpy
-torch
 onnx
 onnxsim
-wheel
 onnxruntime-openvino
