@@ -1,0 +1,7 @@
+numpy
+torch
+onnx
+onnxsim
+wheel
+onnxruntime-gpu
+tensorrt

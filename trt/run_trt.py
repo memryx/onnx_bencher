@@ -15,7 +15,7 @@ def get_model_input_shapes(model_path):
     for input_tensor in model.graph.input:
         name = input_tensor.name
         shape = [
-            dim.dim_value if dim.dim_value > 0 else "dynamic" 
+            dim.dim_value if dim.dim_value > 0 else "dynamic"
             for dim in input_tensor.type.tensor_type.shape.dim
         ]
         input_shapes[name] = shape
@@ -34,7 +34,7 @@ def generate_random_input(input_shapes):
         inputs[name] = np.random.random(resolved_shape).astype(np.float32)
     return inputs
 
-def run_inferences(model_path, num_inferences):
+def run_inferences(model_path, num_inferences, use_fp16):
     """
     Run multiple inferences on an ONNX model using ONNX Runtime.
     :param model_path: Path to the ONNX model file.
@@ -46,7 +46,10 @@ def run_inferences(model_path, num_inferences):
     random_inputs = generate_random_input(input_shapes)
 
     # Initialize ONNX Runtime session
-    ort_session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
+    if use_fp16:
+        ort_session = ort.InferenceSession(model_path, providers=[ ("TensorrtExecutionProvider", {"trt_fp16_enable": True}) ])
+    else:
+        ort_session = ort.InferenceSession(model_path, providers=["TensorrtExecutionProvider"])
 
     # Warm-up: Run one inference to initialize
     ort_session.run(None, random_inputs)
@@ -58,17 +61,34 @@ def run_inferences(model_path, num_inferences):
     end_time = time.time()
 
     total_time = end_time - start_time
-    return total_time
+
+    avg_fps = float(num_inferences / total_time)
+    avg_lat = float(total_time / num_inferences)*1000.0
+    return avg_lat, avg_fps
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "ONNX benchmarker (CPU execution provider)")
+
+    # first make sure the TensorrtExecutionProvider is even available...
+    providers = ort.get_available_providers()
+
+    if "TensorrtExecutionProvider" in providers:
+        pass
+    else:
+        print(f"ERROR: TensorrtExecutionProvider not available. You only have {providers}")
+        exit(1)
+
+    parser = argparse.ArgumentParser(description = "ONNX benchmarker (nVidia TensorRT execution provider)")
     parser.add_argument("model_path",
                         type = str,
                         help = "Input file name")
     parser.add_argument("-n", "--num_frames",
                         type = int,
-                        default = 500,
-                        help = "Number of frames to run")
+                        default = 1000,
+                        help = "Number of frames to run (default 1000)")
+    parser.add_argument("--use_fp16",
+                        default = False,
+                        action = "store_true",
+                        help = "Use FP16 for faster inferrence (and more fair accuracy vs. MX3)")
 
     args = parser.parse_args()
 
@@ -79,6 +99,8 @@ if __name__ == "__main__":
 
     # Run inferences and measure performance
     print(f"Running {num_inferences} inferences on the model: {model_path}")
-    total_time = run_inferences(model_path, num_inferences)
+    lat, fps = run_inferences(model_path, num_inferences, args.use_fp16)
 
-    print(f"Average throughput: {num_inferences / total_time:.1f} FPS")
+    print(f"Ran {args.num_frames} frames (batch=1)")
+    print(f"  Average FPS: {fps:.2f}")
+    print(f"  Average System Latency: {lat:.2f} ms")

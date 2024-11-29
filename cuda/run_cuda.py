@@ -15,7 +15,7 @@ def get_model_input_shapes(model_path):
     for input_tensor in model.graph.input:
         name = input_tensor.name
         shape = [
-            dim.dim_value if dim.dim_value > 0 else "dynamic" 
+            dim.dim_value if dim.dim_value > 0 else "dynamic"
             for dim in input_tensor.type.tensor_type.shape.dim
         ]
         input_shapes[name] = shape
@@ -61,7 +61,10 @@ def run_inferences(model_path, num_inferences, no_tensor_cores):
     end_time = time.time()
 
     total_time = end_time - start_time
-    return total_time
+
+    avg_fps = float(num_inferences / total_time)
+    avg_lat = float(total_time / num_inferences)*1000.0
+    return avg_lat, avg_fps
 
 if __name__ == "__main__":
 
@@ -80,8 +83,8 @@ if __name__ == "__main__":
                         help = "Input file name")
     parser.add_argument("-n", "--num_frames",
                         type = int,
-                        default = 500,
-                        help = "Number of frames to run")
+                        default = 1000,
+                        help = "Number of frames to run (default 1000)")
     parser.add_argument("--no_tensor_cores",
                         default = False,
                         action = "store_true",
@@ -96,6 +99,8 @@ if __name__ == "__main__":
 
     # Run inferences and measure performance
     print(f"Running {num_inferences} inferences on the model: {model_path}")
-    total_time = run_inferences(model_path, num_inferences, args.no_tensor_cores)
+    lat, fps = run_inferences(model_path, num_inferences, args.no_tensor_cores)
 
-    print(f"Average throughput: {num_inferences / total_time:.1f} FPS")
+    print(f"Ran {args.num_frames} frames (batch=1)")
+    print(f"  Average FPS: {fps:.2f}")
+    print(f"  Average System Latency: {lat:.2f} ms")
