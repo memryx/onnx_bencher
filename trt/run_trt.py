@@ -4,6 +4,8 @@ import onnxruntime as ort
 import numpy as np
 import time
 
+ort.set_default_logger_severity(3)
+
 def get_model_input_shapes(model_path):
     """
     Load an ONNX model and extract input shapes.
