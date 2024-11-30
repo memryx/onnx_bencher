@@ -48,13 +48,17 @@ def run_inferences(model_path, num_inferences, device_type):
     input_shapes = get_model_input_shapes(model_path)
     random_inputs = generate_random_input(input_shapes)
 
+    # Disable ORT optimizations, as recommended by OpenVINO EP docs
+    options = ort.SessionOptions()
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+
     # Initialize ONNX Runtime session
     if device_type == "NPU":
-        ort_session = ort.InferenceSession(model_path, providers=[ ("OpenVINOExecutionProvider", {"device_type": "NPU", "precision": "FP16"}) ])
+        ort_session = ort.InferenceSession(model_path, options, providers=[ ("OpenVINOExecutionProvider", {"device_type": "NPU", "precision": "FP16"}) ])
     elif device_type == "CPU":
-        ort_session = ort.InferenceSession(model_path, providers=[ ("OpenVINOExecutionProvider", {"device_type": "CPU", "precision": "FP32"}) ])
+        ort_session = ort.InferenceSession(model_path, options, providers=[ ("OpenVINOExecutionProvider", {"device_type": "CPU", "precision": "FP32"}) ])
     elif device_type == "GPU":
-        ort_session = ort.InferenceSession(model_path, providers=[ ("OpenVINOExecutionProvider", {"device_type": "GPU", "precision": "FP16"}) ])
+        ort_session = ort.InferenceSession(model_path, options, providers=[ ("OpenVINOExecutionProvider", {"device_type": "GPU", "precision": "FP16"}) ])
     else:
         print(f"ERROR: invalid device_type somehow given to run_inference function...")
 
