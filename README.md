@@ -63,7 +63,7 @@ The `run.sh` script has a couple variables defined at the top you may want to ed
 
 ## Models to Run
 
-The MX3 specializes in computer vision models. See the [Model Explorer](https://developer.memryx.com/model_explorer/models.html) for a handy subset of models that have downloaded from their original sources and tested.
+The MX3 specializes in computer vision models. See the [Model Explorer](https://developer.memryx.com/model_explorer/models.html) for a handy subset of models that have been downloaded from their original sources and tested.
 
 Good sources of ONNX models to try include [the ONNX Model Zoo](https://github.com/onnx/models), [PINTO's model zoo](https://github.com/PINTO0309/PINTO_model_zoo), [OpenMMLab](https://github.com/open-mmlab), and [Ultralytics YOLOs exported to ONNX (up to v9)](https://docs.ultralytics.com/integrations/onnx/).
 
